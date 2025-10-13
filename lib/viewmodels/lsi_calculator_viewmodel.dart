@@ -4,7 +4,6 @@ import '../models/lsi_result.dart';
 import '../models/colors_response.dart';
 import '../services/lsi_api_service.dart';
 
-// State classes
 class LSIFormState {
   final LSIParameters parameters;
   final Map<String, String?> fieldErrors;
@@ -39,7 +38,6 @@ class LSIResultState {
   }
 }
 
-// Providers
 final lsiFormProvider = StateNotifierProvider<LSIFormNotifier, LSIFormState>((ref) {
   return LSIFormNotifier();
 });
@@ -48,7 +46,6 @@ final lsiResultProvider = StateNotifierProvider<LSIResultNotifier, LSIResultStat
   return LSIResultNotifier();
 });
 
-// Notifiers
 class LSIFormNotifier extends StateNotifier<LSIFormState> {
   LSIFormNotifier() : super(_initialState);
 
@@ -119,7 +116,6 @@ class LSIFormNotifier extends StateNotifier<LSIFormState> {
   Map<String, String?> _validateParameters(LSIParameters parameters) {
     final errors = <String, String?>{};
 
-    // Validate pH range (6.0 - 9.0)
     if (parameters.pHCurrent <= 0) {
       errors['pHCurrent'] = 'pH не может быть пустым';
     } else if (parameters.pHCurrent < 6.0 || parameters.pHCurrent > 9.0) {
@@ -131,7 +127,6 @@ class LSIFormNotifier extends StateNotifier<LSIFormState> {
       errors['pHDesired'] = 'pH должен быть между 6.0 и 9.0';
     }
 
-    // Validate temperature range (32-120°F)
     if (parameters.waterTemperatureCurrentF <= 0) {
       errors['waterTemperatureCurrentF'] = 'Температура не может быть пустой';
     } else if (parameters.waterTemperatureCurrentF < 32 || parameters.waterTemperatureCurrentF > 120) {
@@ -143,7 +138,6 @@ class LSIFormNotifier extends StateNotifier<LSIFormState> {
       errors['waterTemperatureDesiredF'] = 'Температура должна быть между 32°F и 120°F';
     }
 
-    // Validate non-negative values
     if (parameters.totalAlkalinityCurrent < 0) {
       errors['totalAlkalinityCurrent'] = 'Общая щелочность не может быть отрицательной';
     }
@@ -183,11 +177,9 @@ class LSIResultNotifier extends StateNotifier<LSIResultState> {
   LSIResultNotifier() : super(const LSIResultState());
 
   Future<void> calculateLSI(LSIParameters parameters) async {
-    print('🔄 Starting LSI calculation in ViewModel...');
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      // Add timeout to prevent hanging
       final result = await LSIApiService.calculateLSI(parameters).timeout(
         const Duration(seconds: 15),
         onTimeout: () {
@@ -195,13 +187,8 @@ class LSIResultNotifier extends StateNotifier<LSIResultState> {
         },
       );
 
-      print('✅ LSI calculation completed, getting colors...');
-      print('🔍 LSI Result: current=${result.current}, desired=${result.desired}');
-
-      // Get colors for the result
       ColorsResponse? colors;
       try {
-        print('🔍 Calling getColors with parameters...');
         colors = await LSIApiService.getColors(
           lsiCurrent: result.current,
           lsiDesired: result.desired,
@@ -221,16 +208,12 @@ class LSIResultNotifier extends StateNotifier<LSIResultState> {
             throw Exception('Colors API timeout: не удалось получить цвета');
           },
         );
-        print('✅ Colors received successfully');
       } catch (e) {
-        print('⚠️ Colors API failed, continuing without colors: $e');
         colors = null; // Continue without colors
       }
 
-      print('✅ Updating state with results...');
       state = state.copyWith(result: result, colors: colors, isLoading: false, error: null);
     } catch (e) {
-      print('❌ Error in ViewModel: $e');
       state = state.copyWith(isLoading: false, error: 'Ошибка при расчете LSI: ${e.toString()}');
     }
   }

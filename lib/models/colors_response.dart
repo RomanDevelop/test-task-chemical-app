@@ -36,7 +36,6 @@ class ColorsResponse {
   });
 
   factory ColorsResponse.fromJson(Map<String, dynamic> json) {
-    print('🔍 Parsing ColorsResponse from JSON: $json');
     try {
       final result = ColorsResponse(
         lsiCurrentColor: json['lsiCurrentColor'] as String?,
@@ -56,10 +55,8 @@ class ColorsResponse {
         phCeilingCurrentColor: json['phCeilingCurrentColor'] as String?,
         phCeilingDesiredColor: json['phCeilingDesiredColor'] as String?,
       );
-      print('✅ ColorsResponse parsed successfully');
       return result;
     } catch (e) {
-      print('❌ Error parsing ColorsResponse: $e');
       rethrow;
     }
   }

@@ -20,32 +20,19 @@ class LSICalculatorScreen extends ConsumerWidget {
         actions: [
           IconButton(
             onPressed: () async {
-              print('🧪 Testing API connection...');
               try {
                 final dio = Dio();
                 final originalToken =
                     'uOkENYi7e8/kz2DRoQG/vfguBuNWxmLlReEvG2ooTTjYsTQsLPnUuU4xeNS/RF5Ej7Wdu6U33lPcpLOJTtvX26+d1WU2DXeptl25HnexZwGiu3u6s1zg4pvkGQjFeAS7aYnqA0osefBuhARxtWvQzIkmVG9ZAadh/AhFPCyZ9hS9qk9EKX2Sv7Ty+9w2tX+tGsdjmEPcRS45ukubeAnoJppinPv/vYPx1Vl0IU6EzZW9z5GDCIveUYW1zftid5Fn';
 
-                print('🔑 Step 1: Getting auth token...');
-
-                // Step 1: Get auth token
                 final authResponse = await dio.post('https://orendatechapi.com/auth', data: originalToken);
 
                 if (authResponse.statusCode == 200) {
                   final authData = authResponse.data;
                   final authToken = authData['token'] ?? authData.toString();
-                  print('✅ Auth token received: ${authToken.toString().substring(0, 20)}...');
 
-                  // Step 2: Test Colors API with auth token
-                  print('🔑 Step 2: Testing Colors API...');
                   dio.options.headers['Authorization'] = 'Bearer $authToken';
 
-                  final colorsResponse = await dio.get('https://orendatechapi.com/colors');
-                  print('✅ Colors API works: ${colorsResponse.statusCode}');
-                  print('📊 Colors Response: ${colorsResponse.data}');
-
-                  // Step 3: Test LSI API
-                  print('🔑 Step 3: Testing LSI API...');
                   final lsiResponse = await dio.get(
                     'https://orendatechapi.com/calculateLSI',
                     queryParameters: {
@@ -65,14 +52,8 @@ class LSICalculatorScreen extends ConsumerWidget {
                       'boratesDesired': 0,
                     },
                   );
-                  print('✅ LSI API works: ${lsiResponse.statusCode}');
-                  print('📊 LSI Response: ${lsiResponse.data}');
-                } else {
-                  print('❌ Auth failed: ${authResponse.statusCode}');
-                }
-              } catch (e) {
-                print('❌ API Test failed: $e');
-              }
+                } else {}
+              } catch (e) {}
             },
             icon: const Icon(Icons.api),
             tooltip: 'Тест API',
@@ -84,21 +65,18 @@ class LSICalculatorScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Current Parameters Section
             _buildSectionHeader(context, 'Текущие параметры'),
             const SizedBox(height: 16),
             _buildCurrentParametersForm(context, ref, formState),
 
             const SizedBox(height: 32),
 
-            // Desired Parameters Section
             _buildSectionHeader(context, 'Желаемые параметры'),
             const SizedBox(height: 16),
             _buildDesiredParametersForm(context, ref, formState),
 
             const SizedBox(height: 32),
 
-            // Calculate Button
             ElevatedButton(
               onPressed:
                   formState.isValid && !resultState.isLoading ? () => _calculateLSI(ref, formState.parameters) : null,
@@ -111,7 +89,6 @@ class LSICalculatorScreen extends ConsumerWidget {
 
             const SizedBox(height: 16),
 
-            // Cancel Button (only when loading)
             if (resultState.isLoading) ...[
               OutlinedButton(
                 onPressed: () => ref.read(lsiResultProvider.notifier).clearResults(),
@@ -122,7 +99,6 @@ class LSICalculatorScreen extends ConsumerWidget {
 
             const SizedBox(height: 24),
 
-            // Results Section
             if (resultState.error != null) ...[
               Card(
                 color: Colors.red.shade50,

@@ -9,7 +9,6 @@ class LSIApiService {
   static const String _baseUrl = ApiConstants.baseUrl;
   static late final Dio _dio;
 
-  /// Initialize Dio with interceptors
   static void initialize() {
     _dio = Dio(
       BaseOptions(
@@ -20,7 +19,6 @@ class LSIApiService {
       ),
     );
 
-    // Add token interceptor
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
@@ -32,9 +30,7 @@ class LSIApiService {
         },
         onError: (error, handler) async {
           if (error.response?.statusCode == 401) {
-            // Token expired, try to refresh
             await _refreshToken();
-            // Retry the request
             final token = await TokenStorageService.getToken();
             if (token != null) {
               error.requestOptions.headers['Authorization'] = 'Bearer $token';
@@ -49,15 +45,10 @@ class LSIApiService {
     );
   }
 
-  /// Refresh the API token by calling /auth endpoint
   static Future<void> _refreshToken() async {
     try {
-      print('🔄 Refreshing API token...');
-
-      // Get the original token
       final originalToken = ApiConstants.apiToken;
 
-      // Call /auth endpoint to get new token
       final response = await _dio.post(
         '/auth',
         data: originalToken, // Send token as body
@@ -66,29 +57,18 @@ class LSIApiService {
       if (response.statusCode == 200) {
         final authData = response.data;
         final newToken = authData['token'] ?? authData.toString();
-        print('✅ New token received: ${newToken.toString().substring(0, 20)}...');
 
-        // Save new token
         await TokenStorageService.saveToken(newToken);
-        print('✅ Token refreshed successfully');
       } else {
-        print('❌ Failed to refresh token: ${response.statusCode}');
-        // Fallback to original token
         await TokenStorageService.initializeDefaultToken();
       }
     } catch (e) {
-      print('❌ Error refreshing token: $e');
-      // Fallback to original token
       await TokenStorageService.initializeDefaultToken();
     }
   }
 
-  /// Calculate LSI using the Orenda API
   static Future<LSIResult> calculateLSI(LSIParameters parameters) async {
     try {
-      print('🚀 Starting LSI calculation...');
-      print('📊 Parameters: ${parameters.toJson()}');
-
       final response = await _dio.get(
         ApiConstants.calculateLSIEndpoint,
         queryParameters: {
@@ -109,35 +89,23 @@ class LSIApiService {
         },
       );
 
-      print('✅ LSI calculation successful: ${response.data}');
-      print('🔍 Response data type: ${response.data.runtimeType}');
-      print('🔍 Response data content: ${response.data}');
-
       try {
         final result = LSIResult.fromJson(response.data);
-        print('✅ LSIResult created successfully');
         return result;
       } catch (e) {
-        print('❌ Error creating LSIResult: $e');
         rethrow;
       }
     } on DioException catch (e) {
-      print('❌ DioException: ${e.message}');
-      print('❌ Response: ${e.response?.data}');
-      print('❌ Status Code: ${e.response?.statusCode}');
-
       if (e.response != null) {
         throw Exception('Failed to calculate LSI: ${e.response?.statusCode} - ${e.response?.data}');
       } else {
         throw Exception('Network error: ${e.message}');
       }
     } catch (e) {
-      print('❌ General error: $e');
       throw Exception('Unexpected error: $e');
     }
   }
 
-  /// Get colors for LSI values
   static Future<ColorsResponse> getColors({
     double? lsiCurrent,
     double? lsiDesired,

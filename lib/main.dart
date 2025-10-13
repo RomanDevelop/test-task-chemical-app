@@ -7,7 +7,6 @@ import 'services/token_storage_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize secure storage and API service
   await TokenStorageService.initializeDefaultToken();
   LSIApiService.initialize();
 

@@ -7,7 +7,6 @@ class LSIResult {
   const LSIResult({required this.current, required this.desired, this.phCeilingCurrent, this.phCeilingDesired});
 
   factory LSIResult.fromJson(Map<String, dynamic> json) {
-    print('🔍 Parsing LSIResult from JSON: $json');
     try {
       final result = LSIResult(
         current: _parseDouble(json['lsiCurrent']),
@@ -15,10 +14,8 @@ class LSIResult {
         phCeilingCurrent: json['phCeilingCurrent'] != null ? _parseDouble(json['phCeilingCurrent']) : null,
         phCeilingDesired: json['phCeilingDesired'] != null ? _parseDouble(json['phCeilingDesired']) : null,
       );
-      print('✅ LSIResult parsed successfully: current=${result.current}, desired=${result.desired}');
       return result;
     } catch (e) {
-      print('❌ Error parsing LSIResult: $e');
       rethrow;
     }
   }
