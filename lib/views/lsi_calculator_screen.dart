@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
+import 'history_screen.dart';
 import '../viewmodels/lsi_calculator_viewmodel.dart';
 import '../widgets/input_field.dart';
 import '../widgets/lsi_result_card.dart';
@@ -18,6 +19,13 @@ class LSICalculatorScreen extends ConsumerWidget {
         title: const Text('LSI Calculator'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const HistoryScreen()));
+            },
+            icon: const Icon(Icons.history),
+            tooltip: 'История',
+          ),
           IconButton(
             onPressed: () async {
               try {

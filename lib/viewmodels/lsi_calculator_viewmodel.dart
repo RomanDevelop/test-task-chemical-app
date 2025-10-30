@@ -3,6 +3,8 @@ import '../models/lsi_parameters.dart';
 import '../models/lsi_result.dart';
 import '../models/colors_response.dart';
 import '../services/lsi_api_service.dart';
+import '../models/calculation_record.dart';
+import 'history_viewmodel.dart';
 
 class LSIFormState {
   final LSIParameters parameters;
@@ -43,7 +45,7 @@ final lsiFormProvider = StateNotifierProvider<LSIFormNotifier, LSIFormState>((re
 });
 
 final lsiResultProvider = StateNotifierProvider<LSIResultNotifier, LSIResultState>((ref) {
-  return LSIResultNotifier();
+  return LSIResultNotifier(ref);
 });
 
 class LSIFormNotifier extends StateNotifier<LSIFormState> {
@@ -174,7 +176,8 @@ class LSIFormNotifier extends StateNotifier<LSIFormState> {
 }
 
 class LSIResultNotifier extends StateNotifier<LSIResultState> {
-  LSIResultNotifier() : super(const LSIResultState());
+  final Ref _ref;
+  LSIResultNotifier(this._ref) : super(const LSIResultState());
 
   Future<void> calculateLSI(LSIParameters parameters) async {
     state = state.copyWith(isLoading: true, error: null);
@@ -213,6 +216,9 @@ class LSIResultNotifier extends StateNotifier<LSIResultState> {
       }
 
       state = state.copyWith(result: result, colors: colors, isLoading: false, error: null);
+      _ref
+          .read(historyProvider.notifier)
+          .addRecord(CalculationRecord(createdAt: DateTime.now(), parameters: parameters, result: result));
     } catch (e) {
       state = state.copyWith(isLoading: false, error: 'Ошибка при расчете LSI: ${e.toString()}');
     }
