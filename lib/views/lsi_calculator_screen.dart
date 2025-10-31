@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:dio/dio.dart';
 import 'history_screen.dart';
+import 'login_screen.dart';
 import '../viewmodels/lsi_calculator_viewmodel.dart';
+import '../providers/auth_providers.dart';
 import '../widgets/input_field.dart';
 import '../widgets/lsi_result_card.dart';
 
@@ -26,45 +27,44 @@ class LSICalculatorScreen extends ConsumerWidget {
             icon: const Icon(Icons.history),
             tooltip: 'История',
           ),
-          IconButton(
-            onPressed: () async {
-              try {
-                final dio = Dio();
-                final originalToken =
-                    'uOkENYi7e8/kz2DRoQG/vfguBuNWxmLlReEvG2ooTTjYsTQsLPnUuU4xeNS/RF5Ej7Wdu6U33lPcpLOJTtvX26+d1WU2DXeptl25HnexZwGiu3u6s1zg4pvkGQjFeAS7aYnqA0osefBuhARxtWvQzIkmVG9ZAadh/AhFPCyZ9hS9qk9EKX2Sv7Ty+9w2tX+tGsdjmEPcRS45ukubeAnoJppinPv/vYPx1Vl0IU6EzZW9z5GDCIveUYW1zftid5Fn';
+          PopupMenuButton<String>(
+            onSelected: (value) async {
+              if (value == 'logout') {
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder:
+                      (context) => AlertDialog(
+                        title: const Text('Выход'),
+                        content: const Text('Вы уверены, что хотите выйти?'),
+                        actions: [
+                          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Отмена')),
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            child: const Text('Выйти', style: TextStyle(color: Colors.red)),
+                          ),
+                        ],
+                      ),
+                );
 
-                final authResponse = await dio.post('https://orendatechapi.com/auth', data: originalToken);
-
-                if (authResponse.statusCode == 200) {
-                  final authData = authResponse.data;
-                  final authToken = authData['token'] ?? authData.toString();
-
-                  dio.options.headers['Authorization'] = 'Bearer $authToken';
-
-                  final lsiResponse = await dio.get(
-                    'https://orendatechapi.com/calculateLSI',
-                    queryParameters: {
-                      'waterTemperatureCurrentF': 80,
-                      'phCurrent': 7.6,
-                      'totalAlkalinityCurrent': 80,
-                      'calciumCurrent': 300,
-                      'cyaCurrent': 35,
-                      'saltCurrent': 400,
-                      'boratesCurrent': 0,
-                      'waterTemperatureDesiredF': 77,
-                      'phDesired': 8.2,
-                      'totalAlkalinityDesired': 90,
-                      'calciumDesired': 370,
-                      'cyaDesired': 0,
-                      'saltDesired': 900,
-                      'boratesDesired': 0,
-                    },
-                  );
-                } else {}
-              } catch (e) {}
+                if (confirmed == true && context.mounted) {
+                  final authNotifier = ref.read(authNotifierProvider.notifier);
+                  await authNotifier.logout();
+                  if (context.mounted) {
+                    Navigator.of(
+                      context,
+                    ).pushAndRemoveUntil(MaterialPageRoute(builder: (_) => const LoginScreen()), (route) => false);
+                  }
+                }
+              }
             },
-            icon: const Icon(Icons.api),
-            tooltip: 'Тест API',
+            itemBuilder:
+                (context) => [
+                  PopupMenuItem(
+                    value: 'logout',
+                    child: Row(children: const [Icon(Icons.logout, size: 20), SizedBox(width: 8), Text('Выйти')]),
+                  ),
+                ],
+            child: const Padding(padding: EdgeInsets.all(8.0), child: Icon(Icons.account_circle)),
           ),
         ],
       ),

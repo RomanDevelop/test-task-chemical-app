@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../viewmodels/history_viewmodel.dart';
 import '../models/calculation_record.dart';
+import '../providers/auth_providers.dart';
+import 'login_screen.dart';
 
 class HistoryScreen extends ConsumerWidget {
   const HistoryScreen({super.key});
@@ -10,7 +12,50 @@ class HistoryScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final items = ref.watch(historyProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('История расчетов')),
+      appBar: AppBar(
+        title: const Text('История расчетов'),
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (value) async {
+              if (value == 'logout') {
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder:
+                      (context) => AlertDialog(
+                        title: const Text('Выход'),
+                        content: const Text('Вы уверены, что хотите выйти?'),
+                        actions: [
+                          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Отмена')),
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            child: const Text('Выйти', style: TextStyle(color: Colors.red)),
+                          ),
+                        ],
+                      ),
+                );
+
+                if (confirmed == true && context.mounted) {
+                  final authNotifier = ref.read(authNotifierProvider.notifier);
+                  await authNotifier.logout();
+                  if (context.mounted) {
+                    Navigator.of(
+                      context,
+                    ).pushAndRemoveUntil(MaterialPageRoute(builder: (_) => const LoginScreen()), (route) => false);
+                  }
+                }
+              }
+            },
+            itemBuilder:
+                (context) => [
+                  PopupMenuItem(
+                    value: 'logout',
+                    child: Row(children: const [Icon(Icons.logout, size: 20), SizedBox(width: 8), Text('Выйти')]),
+                  ),
+                ],
+            child: const Padding(padding: EdgeInsets.all(8.0), child: Icon(Icons.account_circle)),
+          ),
+        ],
+      ),
       body:
           items.isEmpty
               ? const Center(child: Text('Пока нет расчетов'))
